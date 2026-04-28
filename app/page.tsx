@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ExternalLink,
+  Heart,
   ImagePlus,
   LogIn,
   LogOut,
@@ -150,6 +152,8 @@ export default function Home() {
   const [editingTool, setEditingTool] = useState<HglTool | null>(null);
   const [draft, setDraft] = useState<ToolDraft>(emptyDraft);
   const [sortBy, setSortBy] = useState<SortOption>("updated-desc");
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [currentView, setCurrentView] = useState<"home" | "favorites">("home");
   const [memberEmail, setMemberEmail] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -158,7 +162,7 @@ export default function Home() {
   const canSeePrivate = isAdmin || isMember;
 
   const visibleTools = useMemo(() => {
-    return tools
+    let base = tools
       .filter((tool) => canSeePrivate || tool.type === "public")
       .filter((tool) => {
         const query = search.trim().toLowerCase();
@@ -173,7 +177,13 @@ export default function Home() {
         if (sortBy === "updated-asc") return a.updated_on.localeCompare(b.updated_on);
         return b.updated_on.localeCompare(a.updated_on);
       });
-  }, [canSeePrivate, search, tools, sortBy]);
+
+    if (currentView === "favorites") {
+      base = base.filter((tool) => favorites.has(tool.id));
+    }
+
+    return base;
+  }, [canSeePrivate, search, tools, sortBy, currentView, favorites]);
 
   const filteredRecentTools = useMemo(() => {
     const visibleIds = new Set(visibleTools.map((tool) => tool.id));
@@ -240,6 +250,27 @@ export default function Home() {
     }
   }, [isAdmin]);
 
+  const loadFavorites = useCallback(async (currentUser: User | null) => {
+    if (!supabase || !currentUser) {
+      setFavorites(new Set());
+      return;
+    }
+    const { data, error } = await supabase
+      .from("favorite_tools")
+      .select("tool_id")
+      .eq("user_id", currentUser.id);
+
+    if (!error && data) {
+      setFavorites(new Set(data.map((row) => row.tool_id)));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (search.trim() && currentView === "favorites") {
+      setCurrentView("home");
+    }
+  }, [search, currentView]);
+
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
@@ -283,7 +314,8 @@ export default function Home() {
 
   useEffect(() => {
     loadRecent(user);
-  }, [loadRecent, user]);
+    loadFavorites(user);
+  }, [loadRecent, loadFavorites, user]);
 
   useEffect(() => {
     loadMembers();
@@ -481,6 +513,33 @@ export default function Home() {
     await loadMembers();
   }
 
+  async function toggleFavorite(toolId: string) {
+    if (!supabase || !user) {
+      setMessage("Please sign in to save favorites.");
+      return;
+    }
+
+    const isFavorite = favorites.has(toolId);
+    const next = new Set(favorites);
+
+    if (isFavorite) {
+      next.delete(toolId);
+      const { error } = await supabase
+        .from("favorite_tools")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("tool_id", toolId);
+      if (error) setMessage(error.message);
+    } else {
+      next.add(toolId);
+      const { error } = await supabase
+        .from("favorite_tools")
+        .insert({ user_id: user.id, tool_id: toolId });
+      if (error) setMessage(error.message);
+    }
+    setFavorites(next);
+  }
+
   async function removeMember(address: string) {
     if (!supabase || !isAdmin) return;
     const { error } = await supabase.from("hgl_members").delete().eq("email", address);
@@ -497,6 +556,16 @@ export default function Home() {
         <div className="brand">
           <LabLogo />
           <h1>HGL Tools</h1>
+          <button
+            className={`favorite-toggle ${currentView === "favorites" ? "active" : ""}`}
+            onClick={() =>
+              setCurrentView((prev) => (prev === "home" ? "favorites" : "home"))
+            }
+            title="View favorites"
+            type="button"
+          >
+            <Heart fill={currentView === "favorites" ? "currentColor" : "none"} size={22} />
+          </button>
         </div>
 
         <label className="search-box">
@@ -514,6 +583,19 @@ export default function Home() {
             placeholder="Search tools, descriptions, type..."
             value={search}
           />
+          {search && (
+            <button
+              className="search-clear"
+              onClick={() => {
+                setSearch("");
+                setCurrentView("home");
+              }}
+              title="Clear search"
+              type="button"
+            >
+              <X size={16} />
+            </button>
+          )}
         </label>
 
         {user ? (
@@ -544,27 +626,53 @@ export default function Home() {
           </button>
         )}
 
-        <ToolSection
-          canEdit={isAdmin}
-          emptyText="No recently opened tools yet."
-          loading={loading}
-          onEdit={openEditModal}
-          onOpen={openTool}
-          title="Recently"
-          tools={filteredRecentTools}
-        />
+        {currentView === "favorites" ? (
+          <div className="favorites-container">
+            <button className="back-button" onClick={() => setCurrentView("home")} type="button">
+              <ArrowLeft size={18} />
+              Back to Home
+            </button>
+            <ToolSection
+              canEdit={isAdmin}
+              emptyText="You haven't favorited any tools yet."
+              favorites={favorites}
+              loading={loading}
+              onEdit={openEditModal}
+              onOpen={openTool}
+              onToggleFavorite={toggleFavorite}
+              title="Favorite Tools"
+              tools={visibleTools}
+            />
+          </div>
+        ) : (
+          <>
+            <ToolSection
+              canEdit={isAdmin}
+              emptyText="No recently opened tools yet."
+              favorites={favorites}
+              loading={loading}
+              onEdit={openEditModal}
+              onOpen={openTool}
+              onToggleFavorite={toggleFavorite}
+              title="Recently"
+              tools={filteredRecentTools}
+            />
 
-        <ToolSection
-          canEdit={isAdmin}
-          emptyText="No tools match this view."
-          loading={loading}
-          onEdit={openEditModal}
-          onOpen={openTool}
-          onSortChange={(val) => setSortBy(val as SortOption)}
-          sortValue={sortBy}
-          title="Tools"
-          tools={visibleTools}
-        />
+            <ToolSection
+              canEdit={isAdmin}
+              emptyText="No tools match this view."
+              favorites={favorites}
+              loading={loading}
+              onEdit={openEditModal}
+              onOpen={openTool}
+              onSortChange={(val) => setSortBy(val as SortOption)}
+              onToggleFavorite={toggleFavorite}
+              sortValue={sortBy}
+              title="Tools"
+              tools={visibleTools}
+            />
+          </>
+        )}
       </section>
 
       <footer className="app-footer">
@@ -728,20 +836,24 @@ export default function Home() {
 function ToolSection({
   canEdit,
   emptyText,
+  favorites,
   loading,
   onEdit,
   onOpen,
   onSortChange,
+  onToggleFavorite,
   sortValue,
   title,
   tools,
 }: {
   canEdit: boolean;
   emptyText: string;
+  favorites: Set<string>;
   loading: boolean;
   onEdit: (tool: HglTool) => void;
   onOpen: (tool: HglTool, newTab?: boolean) => void;
   onSortChange?: (value: string) => void;
+  onToggleFavorite: (toolId: string) => void;
   sortValue?: string;
   title: string;
   tools: HglTool[];
@@ -798,6 +910,14 @@ function ToolSection({
                   type="button"
                 >
                   <ExternalLink size={14} />
+                </button>
+                <button
+                  className={`heart-button ${favorites.has(tool.id) ? "active" : ""}`}
+                  onClick={() => onToggleFavorite(tool.id)}
+                  title={favorites.has(tool.id) ? "Remove from favorites" : "Add to favorites"}
+                  type="button"
+                >
+                  <Heart fill={favorites.has(tool.id) ? "currentColor" : "none"} size={16} />
                 </button>
               </div>
               <p>{tool.description}</p>

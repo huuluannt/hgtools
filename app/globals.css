@@ -144,6 +144,33 @@ button {
   min-width: 180px;
   margin-left: auto;
   padding: 0 16px;
+  position: relative;
+}
+
+.search-clear {
+  align-items: center;
+  background: #f1f5f9;
+  border: 0;
+  border-radius: 50%;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  height: 24px;
+  justify-content: center;
+  margin-left: 8px;
+  opacity: 0;
+  padding: 0;
+  transition: all 0.2s ease;
+  width: 24px;
+}
+
+.search-box:hover .search-clear {
+  opacity: 1;
+}
+
+.search-clear:hover {
+  background: #e2e8f0;
+  color: #475569;
 }
 
 .search-box input {
@@ -375,6 +402,74 @@ button {
 
 .tool-icon:hover {
   opacity: 1;
+}
+
+.favorite-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  margin-left: 10px;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.favorite-toggle:hover {
+  color: #c24141;
+  transform: scale(1.1);
+}
+
+.favorite-toggle.active {
+  color: #c24141;
+}
+
+.heart-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #c24141;
+  cursor: pointer;
+  display: inline-flex;
+  opacity: 0.6;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.heart-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.heart-button.active {
+  opacity: 1;
+}
+
+.favorites-container {
+  margin: 0 auto;
+  max-width: 1380px;
+}
+
+.back-button {
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 650;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 8px 14px;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: var(--text);
 }
 
 
