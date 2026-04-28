@@ -27,6 +27,8 @@ type ToolDraft = {
   logoPreview: string | null;
 };
 
+type SortOption = "name-asc" | "name-desc" | "updated-desc" | "updated-asc";
+
 const emptyDraft: ToolDraft = {
   name: "",
   url: "",
@@ -147,6 +149,7 @@ export default function Home() {
   const [activeModal, setActiveModal] = useState<"add" | "edit" | "manage" | null>(null);
   const [editingTool, setEditingTool] = useState<HglTool | null>(null);
   const [draft, setDraft] = useState<ToolDraft>(emptyDraft);
+  const [sortBy, setSortBy] = useState<SortOption>("updated-desc");
   const [memberEmail, setMemberEmail] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -164,8 +167,13 @@ export default function Home() {
           value.toLowerCase().includes(query),
         );
       })
-      .sort((a, b) => b.updated_on.localeCompare(a.updated_on));
-  }, [canSeePrivate, search, tools]);
+      .sort((a, b) => {
+        if (sortBy === "name-asc") return a.name.localeCompare(b.name);
+        if (sortBy === "name-desc") return b.name.localeCompare(a.name);
+        if (sortBy === "updated-asc") return a.updated_on.localeCompare(b.updated_on);
+        return b.updated_on.localeCompare(a.updated_on);
+      });
+  }, [canSeePrivate, search, tools, sortBy]);
 
   const filteredRecentTools = useMemo(() => {
     const visibleIds = new Set(visibleTools.map((tool) => tool.id));
@@ -428,7 +436,7 @@ export default function Home() {
     await loadTools();
   }
 
-  async function openTool(tool: HglTool) {
+  async function openTool(tool: HglTool, newTab = false) {
     const recentKey = email || "";
     const nextRecent = [tool, ...recentTools.filter((recentTool) => recentTool.id !== tool.id)].slice(
       0,
@@ -448,7 +456,12 @@ export default function Home() {
         await loadRecent(user);
       }
     }
-    window.location.href = tool.url;
+
+    if (newTab) {
+      window.open(tool.url, "_blank", "noopener,noreferrer");
+    } else {
+      window.location.href = tool.url;
+    }
   }
 
   async function addMember() {
@@ -540,7 +553,9 @@ export default function Home() {
           loading={loading}
           onEdit={openEditModal}
           onOpen={openTool}
-          title="Tools list"
+          onSortChange={(val) => setSortBy(val as SortOption)}
+          sortValue={sortBy}
+          title="Tools"
           tools={visibleTools}
         />
       </section>
@@ -709,6 +724,8 @@ function ToolSection({
   loading,
   onEdit,
   onOpen,
+  onSortChange,
+  sortValue,
   title,
   tools,
 }: {
@@ -716,14 +733,30 @@ function ToolSection({
   emptyText: string;
   loading: boolean;
   onEdit: (tool: HglTool) => void;
-  onOpen: (tool: HglTool) => void;
+  onOpen: (tool: HglTool, newTab?: boolean) => void;
+  onSortChange?: (value: string) => void;
+  sortValue?: string;
   title: string;
   tools: HglTool[];
 }) {
   return (
     <section className="tool-section">
       <div className="section-title">
-        <h2>{title}</h2>
+        <div className="title-group">
+          <h2>{title}</h2>
+          {onSortChange && (
+            <select
+              className="sort-select"
+              onChange={(e) => onSortChange(e.target.value)}
+              value={sortValue}
+            >
+              <option value="name-asc">Name A → Z</option>
+              <option value="name-desc">Name Z → A</option>
+              <option value="updated-desc">Updated Newest</option>
+              <option value="updated-asc">Updated Oldest</option>
+            </select>
+          )}
+        </div>
         <span>{tools.length} tools</span>
       </div>
 
@@ -747,10 +780,19 @@ function ToolSection({
             <div className={canEdit ? "tool-row admin" : "tool-row"} key={`${title}-${tool.id}`}>
               <span className="row-number">{index + 1}</span>
               <ToolLogo tool={tool} />
-              <button className="tool-link" onClick={() => onOpen(tool)} type="button">
-                {tool.name}
-                <ExternalLink size={14} />
-              </button>
+              <div className="tool-link">
+                <button className="tool-name" onClick={() => onOpen(tool)} type="button">
+                  {tool.name}
+                </button>
+                <button
+                  className="tool-icon"
+                  onClick={() => onOpen(tool, true)}
+                  title="Open in new tab"
+                  type="button"
+                >
+                  <ExternalLink size={14} />
+                </button>
+              </div>
               <p>{tool.description}</p>
               <time dateTime={tool.updated_on}>{tool.updated_on}</time>
               <TypePill type={tool.type} />

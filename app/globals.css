@@ -84,6 +84,7 @@ button {
 .brand h1 {
   color: #000000;
   font-size: clamp(26px, 2.4vw, 34px);
+  font-family: var(--font-inter), sans-serif;
   font-weight: 900;
   line-height: 1;
   margin: 0;
@@ -93,6 +94,7 @@ button {
 .footer-brand span {
   color: var(--muted);
   font-size: 13px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 650;
 }
 
@@ -155,6 +157,7 @@ button {
   border-radius: 11px;
   display: inline-flex;
   font-size: 13px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 750;
   gap: 8px;
   min-height: 36px;
@@ -219,8 +222,35 @@ button {
 .section-title h2 {
   color: #000000;
   font-size: clamp(18px, 1.6vw, 23px);
+  font-family: var(--font-inter), sans-serif;
   font-weight: 900;
   margin: 0;
+}
+
+.title-group {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.sort-select {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
+}
+
+.sort-select:hover {
+  background: #ffffff;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .section-title span {
@@ -256,6 +286,7 @@ button {
   border-bottom: 1px solid var(--line);
   color: #000000;
   font-size: 14px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 900;
   text-transform: none;
 }
@@ -298,27 +329,47 @@ button {
   background: #e8eef5;
   color: var(--navy);
   display: inline-flex;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 900;
   justify-content: center;
 }
 
 .tool-link {
   align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.tool-name,
+.tool-icon {
+  align-items: center;
   background: transparent;
   border: 0;
   color: var(--text);
   display: inline-flex;
   font-size: 14px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
-  gap: 8px;
-  justify-content: flex-start;
   padding: 0;
   text-align: left;
 }
 
-.tool-link:hover {
+.tool-name:hover,
+.tool-icon:hover {
   color: #086fa3;
 }
+
+.tool-icon {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.tool-icon:hover {
+  opacity: 1;
+}
+
+
 
 .tool-row p {
   color: var(--muted);
@@ -331,19 +382,20 @@ button {
   border-radius: 7px;
   display: inline-flex;
   font-size: 12px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 750;
   justify-content: center;
   padding: 5px 9px;
 }
 
 .type-pill.public {
-  background: #edf7ef;
-  color: #047333;
+  background: #eaf2fb;
+  color: #0b5590;
 }
 
 .type-pill.private {
-  background: #eaf2fb;
-  color: #0b5590;
+  background: #fff7ed;
+  color: #c2410c;
 }
 
 .edit-button {
@@ -354,6 +406,7 @@ button {
   color: #000000;
   display: inline-flex;
   font-size: 12px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
   gap: 7px;
   min-height: 30px;
@@ -403,6 +456,7 @@ button {
 
 .modal-header h2 {
   font-size: 20px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 900;
   margin: 0;
 }
@@ -428,6 +482,7 @@ button {
   color: var(--muted);
   display: grid;
   font-size: 13px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
   gap: 7px;
 }
@@ -463,6 +518,7 @@ button {
 .type-choice span {
   color: var(--muted);
   font-size: 13px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 850;
   margin-right: auto;
   padding-left: 4px;
@@ -474,6 +530,7 @@ button {
   border-radius: 10px;
   color: var(--muted);
   font-size: 13px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 850;
   min-height: 36px;
   padding: 0 12px;
@@ -505,6 +562,7 @@ button {
 
 .logo-dropzone span {
   font-size: 14px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 800;
 }
 
@@ -549,6 +607,7 @@ button {
 
 .member-row span {
   font-size: 14px;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 700;
 }
 
@@ -622,6 +681,7 @@ button {
     content: "Scroll horizontally";
     display: block;
     font-size: 12px;
+    font-family: var(--font-inter), sans-serif;
     font-weight: 750;
     padding: 8px 14px 10px;
   }
