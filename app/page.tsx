@@ -504,6 +504,13 @@ export default function Home() {
           <input
             aria-label="Search tools"
             onChange={(event) => setSearch(event.target.value)}
+            onClick={(e) => (e.target as HTMLInputElement).select()}
+            onFocus={(e) => e.target.select()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                (e.target as HTMLInputElement).select();
+              }
+            }}
             placeholder="Search tools, descriptions, type..."
             value={search}
           />
