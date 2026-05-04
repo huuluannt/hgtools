@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HGL Tools",
+  title: "HG Tools v1",
   description: "Human Genetics Laboratory tools portal",
 };
 

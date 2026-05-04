@@ -306,14 +306,14 @@ button {
 .tool-row {
   align-items: center;
   display: grid;
-  gap: 14px;
-  grid-template-columns: 54px 58px minmax(160px, 1.1fr) minmax(240px, 1.6fr) 116px 92px;
+  gap: 10px;
+  grid-template-columns: 42px 50px minmax(160px, 1.1fr) minmax(240px, 1.6fr) 116px 92px;
   padding: 10px 0;
 }
 
 .table-head.admin,
 .tool-row.admin {
-  grid-template-columns: 54px 58px minmax(160px, 1.1fr) minmax(240px, 1.6fr) 116px 92px 92px;
+  grid-template-columns: 42px 50px minmax(160px, 1.1fr) minmax(240px, 1.6fr) 116px 92px 92px;
 }
 
 .table-head {
@@ -352,6 +352,10 @@ button {
   font-weight: 500;
 }
 
+.no-col {
+  text-align: center;
+}
+
 .tool-logo {
   border-radius: 10px;
   height: 34px;
@@ -367,6 +371,97 @@ button {
   font-family: var(--font-inter), sans-serif;
   font-weight: 900;
   justify-content: center;
+}
+
+.user-menu-container {
+  position: relative;
+}
+
+.user-avatar-trigger {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.avatar-circle {
+  align-items: center;
+  background: #f1f5f9;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  color: #64748b;
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 38px;
+}
+
+.user-avatar-trigger:hover .avatar-circle {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dropdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+}
+
+.user-email-label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.user-email-value {
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-divider {
+  background: #f1f5f9;
+  height: 1px;
+  margin: 0 8px;
+}
+
+.user-dropdown {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 200px;
+  z-index: 100;
+}
+
+.dropdown-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+  gap: 10px;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.dropdown-item:hover {
+  background: #fef2f2;
 }
 
 .tool-link {
@@ -425,13 +520,29 @@ button {
   color: #c24141;
 }
 
+.description-col {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.description-col p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .heart-button {
   align-items: center;
   background: transparent;
   border: 0;
   color: #c24141;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
+  flex-shrink: 0;
   opacity: 0.6;
   padding: 4px;
   transition: all 0.2s ease;
@@ -775,25 +886,20 @@ button {
 
   .tool-table {
     overflow-x: auto;
-    scrollbar-color: #9dcfca #edf6f4;
+    scrollbar-color: #bae6fd #f0f9ff;
     scrollbar-width: thin;
   }
 
   .tool-table::after {
-    color: var(--muted);
-    content: "Scroll horizontally";
-    display: block;
-    font-size: 12px;
-    font-family: var(--font-inter), sans-serif;
-    font-weight: 750;
-    padding: 8px 14px 10px;
+    content: none;
+    display: none;
   }
 
   .table-head,
   .tool-row,
   .table-head.admin,
   .tool-row.admin {
-    grid-template-columns: 46px 54px 180px 280px 110px 92px 86px;
+    grid-template-columns: 36px 46px 180px 280px 110px 92px 86px;
     min-width: 860px;
   }
 

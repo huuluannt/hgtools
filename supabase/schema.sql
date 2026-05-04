@@ -5,7 +5,7 @@ create table if not exists public.tools (
   name text not null,
   url text not null,
   description text not null default '',
-  updated_on date not null default current_date,
+  updated_on timestamptz not null default now(),
   type text not null check (type in ('public', 'private')),
   logo_url text,
   created_at timestamptz not null default now()

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ChevronDown,
   ExternalLink,
   Heart,
   ImagePlus,
@@ -14,6 +15,7 @@ import {
   Search,
   Settings,
   Trash2,
+  User as UserIcon,
   X,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
@@ -101,8 +103,26 @@ function TypePill({ type }: { type: ToolType }) {
   return <span className={`type-pill ${type}`}>{type === "public" ? "Public" : "Private"}</span>;
 }
 
-function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
+function nowIsoString() {
+  return new Date().toISOString();
+}
+
+function formatUpdated(dateStr: string) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+
+  return (
+    <>
+      {`${yyyy}-${mm}-${dd}`} <i>{`${hh}:${min}`}</i>
+    </>
+  );
 }
 
 function getFileFromClipboard(event: ClipboardEvent) {
@@ -154,8 +174,10 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<SortOption>("updated-desc");
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [currentView, setCurrentView] = useState<"home" | "favorites">("home");
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [memberEmail, setMemberEmail] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const email = user?.email?.toLowerCase() ?? "";
   const isAdmin = email === ADMIN_EMAIL;
@@ -270,6 +292,16 @@ export default function Home() {
       setCurrentView("home");
     }
   }, [search, currentView]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -431,7 +463,7 @@ export default function Home() {
           description: draft.description.trim(),
           type: draft.type,
           logo_url: uploadedLogo ?? editingTool.logo_url,
-          updated_on: todayIsoDate(),
+          updated_on: nowIsoString(),
         };
         const { error } = await supabase.from("tools").update(payload).eq("id", editingTool.id);
         if (error) throw error;
@@ -442,7 +474,7 @@ export default function Home() {
           description: draft.description.trim(),
           type: draft.type,
           logo_url: uploadedLogo,
-          updated_on: todayIsoDate(),
+          updated_on: nowIsoString(),
         };
         const { error } = await supabase.from("tools").insert(payload);
         if (error) throw error;
@@ -555,7 +587,7 @@ export default function Home() {
       <header className="app-header">
         <div className="brand">
           <LabLogo />
-          <h1>HGL Tools</h1>
+          <h1>HG Tools</h1>
           <button
             className={`favorite-toggle ${currentView === "favorites" ? "active" : ""}`}
             onClick={() =>
@@ -599,10 +631,39 @@ export default function Home() {
         </label>
 
         {user ? (
-          <button className="signin secondary" onClick={signOut} type="button">
-            <LogOut size={18} />
-            Sign out
-          </button>
+          <div className="user-menu-container" ref={userMenuRef}>
+            <button
+              className="user-avatar-trigger"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              title={user.email || "User menu"}
+              type="button"
+            >
+              <div className="avatar-circle">
+                <UserIcon size={20} />
+              </div>
+            </button>
+
+            {isUserMenuOpen && (
+              <div className="user-dropdown">
+                <div className="dropdown-info">
+                  <span className="user-email-label">Signed in as</span>
+                  <span className="user-email-value">{user.email}</span>
+                </div>
+                <div className="dropdown-divider" />
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    signOut();
+                    setIsUserMenuOpen(false);
+                  }}
+                  type="button"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <button className="signin" disabled={!supabase} onClick={signIn} type="button">
             <LogIn size={18} />
@@ -881,7 +942,7 @@ function ToolSection({
 
       <div className="tool-table">
         <div className={canEdit ? "table-head admin" : "table-head"}>
-          <span>No.</span>
+          <span className="no-col">No.</span>
           <span>Logo</span>
           <span>Tool name</span>
           <span>Description</span>
@@ -897,7 +958,7 @@ function ToolSection({
         ) : (
           tools.map((tool, index) => (
             <div className={canEdit ? "tool-row admin" : "tool-row"} key={`${title}-${tool.id}`}>
-              <span className="row-number">{index + 1}</span>
+              <span className="row-number no-col">{index + 1}</span>
               <ToolLogo tool={tool} />
               <div className="tool-link">
                 <button className="tool-name" onClick={() => onOpen(tool)} type="button">
@@ -911,6 +972,8 @@ function ToolSection({
                 >
                   <ExternalLink size={14} />
                 </button>
+              </div>
+              <div className="description-col">
                 <button
                   className={`heart-button ${favorites.has(tool.id) ? "active" : ""}`}
                   onClick={() => onToggleFavorite(tool.id)}
@@ -919,9 +982,11 @@ function ToolSection({
                 >
                   <Heart fill={favorites.has(tool.id) ? "currentColor" : "none"} size={16} />
                 </button>
+                <p>{tool.description}</p>
               </div>
-              <p>{tool.description}</p>
-              <time dateTime={tool.updated_on}>{tool.updated_on}</time>
+              <time className="updated-col" dateTime={tool.updated_on}>
+                {formatUpdated(tool.updated_on)}
+              </time>
               <TypePill type={tool.type} />
               {canEdit && (
                 <button className="edit-button" onClick={() => onEdit(tool)} type="button">
