@@ -741,7 +741,15 @@ export default function Home() {
               type="button"
             >
               <div className="avatar-circle">
-                <UserIcon size={20} />
+                {user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
+                  <img
+                    alt="User avatar"
+                    className="avatar-image"
+                    src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                  />
+                ) : (
+                  <UserIcon size={20} />
+                )}
               </div>
             </button>
 
