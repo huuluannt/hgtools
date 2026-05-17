@@ -375,12 +375,21 @@ export default function Home() {
     function handleMessage(event: MessageEvent) {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === "SUPABASE_AUTH_COMPLETED") {
-        supabase?.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            setUser(session.user);
-            setMessage("Signed in successfully!");
-          }
-        });
+        const sessionData = event.data.session;
+        if (sessionData && supabase) {
+          supabase.auth.setSession({
+            access_token: sessionData.access_token,
+            refresh_token: sessionData.refresh_token
+          }).then(({ data, error }) => {
+            if (!error && data.session) {
+              setUser(data.session.user);
+              setMessage("Signed in successfully!");
+            } else if (sessionData.user) {
+              setUser(sessionData.user);
+              setMessage("Signed in successfully!");
+            }
+          });
+        }
       }
     }
 
@@ -397,8 +406,19 @@ export default function Home() {
           supabase?.auth.getSession().then(({ data: { session } }) => {
             if (session) {
               clearInterval(checkSession);
-              window.opener.postMessage({ type: "SUPABASE_AUTH_COMPLETED" }, window.location.origin);
-              window.close();
+              window.opener.postMessage({
+                type: "SUPABASE_AUTH_COMPLETED",
+                session: {
+                  access_token: session.access_token,
+                  refresh_token: session.refresh_token,
+                  user: session.user
+                }
+              }, "*");
+              
+              // Small delay to ensure postMessage finishes dispatching before popup closes
+              setTimeout(() => {
+                window.close();
+              }, 200);
             }
           });
         }, 300);
