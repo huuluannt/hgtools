@@ -370,14 +370,96 @@ export default function Home() {
     return () => window.removeEventListener("paste", onPaste);
   }, [activeModal]);
 
+  // Listen for the login completion message sent by the OAuth popup
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "SUPABASE_AUTH_COMPLETED") {
+        supabase?.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            setUser(session.user);
+            setMessage("Signed in successfully!");
+          }
+        });
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // Handle the callback flow when this window is the opened OAuth popup
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.opener) {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("login_callback")) {
+        const checkSession = setInterval(() => {
+          supabase?.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+              clearInterval(checkSession);
+              window.opener.postMessage({ type: "SUPABASE_AUTH_COMPLETED" }, window.location.origin);
+              window.close();
+            }
+          });
+        }, 300);
+
+        // Fallback auto-close after 15s
+        setTimeout(() => {
+          clearInterval(checkSession);
+          window.close();
+        }, 15000);
+      }
+    }
+  }, []);
+
   async function signIn() {
     if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
+    
+    // Check if the application is running inside an iframe
+    const isIframe = typeof window !== "undefined" && window.self !== window.top;
+    
+    if (isIframe) {
+      setMessage("Opening Google sign-in window...");
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "?login_callback=true",
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      if (data?.url) {
+        const width = 550;
+        const height = 650;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+        
+        const popup = window.open(
+          data.url,
+          "hgltools-google-signin",
+          `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+        );
+        
+        if (popup) {
+          popup.focus();
+        } else {
+          setMessage("Failed to open login window. Please allow popups for this site!");
+        }
+      }
+    } else {
+      // Standalone mode: standard page redirect
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+    }
   }
 
   async function signOut() {
